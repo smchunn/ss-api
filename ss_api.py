@@ -44,7 +44,9 @@ def get_sheet(sheet_id, last_modified=None, *, access_token=None) -> None | Dict
         with httpx.Client(verify=ssl_context) as client:
             url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}"
             if last_modified:
-                params = urlencode({"rowsModifiedSince": last_modified})
+                params = urlencode(
+                    {"rowsModifiedSince": last_modified, "include": "writerInfo"}
+                )
                 url += f"?{params}"
             headers = {
                 "Authorization": f"Bearer {bearer}",
@@ -110,11 +112,15 @@ def update_sheet(sheet_id, updates, *, access_token=None):
 
             batch = 500
             for i in range(0, len(updates), batch):
+                json = updates[i : i + batch]
                 response = client.put(
                     url=url,
                     headers=headers,
-                    json=updates[i : i + batch],
+                    json=json,
                     timeout=60,
+                )
+                logging.info(
+                    f"PUT: update sheet, url:{url},headers:{headers},json:{json}"
                 )
                 if response.status_code != 200:
                     raise APIException(f"PUT: update rows, {url},{headers}", response)
