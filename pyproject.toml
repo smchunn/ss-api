@@ -15,3 +15,6 @@ dependencies = [
   "httpx",
   "truststore",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]  # ["."] by default
