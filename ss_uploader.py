@@ -13,7 +13,7 @@ _conf = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.toml")
 
 
 def get_sheet():
-    print("get_sheet")
+    
     if isinstance(CONFIG, dict):
         print("Starting ...")
         if "verbose" in CONFIG and CONFIG["verbose"] == True:
@@ -29,8 +29,8 @@ def get_sheet():
             # Pass the folder_id to the get_sheet_as_excel function
             ss_api.get_sheet_as_excel(
                 table_id, 
-                os.path.join(_dir_out, f'{table_name}.xlsx'), 
-                folder_id=folder_id
+                os.path.join(_dir_out, f'{table_name}.xlsx')
+                #, folder_id=folder_id
             )
 
 
@@ -55,12 +55,11 @@ def set_sheet():
 
     if isinstance(CONFIG, dict):
         target_folder_id = CONFIG.get('env', {}).get('target_folder')
-        print("set_sheet main")
-        print(target_folder_id)
+        
+        
         for k, v in CONFIG["tables"].items():
             table_id = v["id"]
-            print("for loop")
-            print(table_id)
+            
 
             table_src = v["src"]
             table_name = k
@@ -78,8 +77,7 @@ def set_sheet():
                     print(f"  {table_name}({table_id}): new table loaded")
                     CONFIG["tables"][k]["id"] = table_id
             else:
-                print("not table id 71")
-                print(target_folder_id)
+                
                 result = ss_api.import_excel(
                     f"{table_name}",
                     os.path.join(_dir_in, table_src),
@@ -97,7 +95,7 @@ def set_sheet():
 
                 if not import_sheet_id or not target_sheet_id:
                     continue
-                print("line 87")
+                
                 ss_api.clear_sheet(target_sheet_id)
                 ss_api.move_rows(target_sheet_id, import_sheet_id)
                 ss_api.delete_sheet(import_sheet_id)
@@ -107,7 +105,7 @@ def set_sheet():
 if __name__ == "__main__":
     with open(_conf, "r") as conf:
         CONFIG = toml.load(conf)
-        print("loaded config", CONFIG)
+        
         if isinstance(CONFIG, dict):
             for k, v in CONFIG["env"].items():
                 os.environ[k] = v
