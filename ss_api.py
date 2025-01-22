@@ -320,7 +320,7 @@ def update_columns(sheet_id, *, access_token=None):
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
-        # Define the column updates
+        # Define the column updates for specific types
         column_updates = [
             {
                 "title": "Status",
@@ -360,11 +360,18 @@ def update_columns(sheet_id, *, access_token=None):
             updates = []
             for col in columns:
                 if isinstance(col, dict) and "title" in col:
-                    for update in column_updates:
-                        if col["title"] == update["title"]:
-                            update["id"] = col["id"]
-                            updates.append(update)
+                    # Default update to TEXT_NUMBER
+                    update = {
+                        "id": col["id"],
+                        "title": col["title"],
+                        "type": "TEXT_NUMBER"
+                    }
+                    # Check if the column has a specific update
+                    for specific_update in column_updates:
+                        if col["title"] == specific_update["title"]:
+                            update.update(specific_update)
                             break
+                    updates.append(update)
 
             # Update the columns
             for update in updates:
@@ -373,12 +380,13 @@ def update_columns(sheet_id, *, access_token=None):
                 response = client.put(url=url, headers=headers, json=update, timeout=180)
                 if response.status_code != 200:
                     raise APIException(f"PUT: update column, {url},{headers}", response)
-
+            
             print("Columns updated successfully.")
 
     except APIException as e:
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
+
 
 def create_blank_summary_sheet_in_folder(folder_id, *, access_token=None):
     try:
