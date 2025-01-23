@@ -5,7 +5,7 @@ SMARTSHEET_ACCESS_TOKEN = "XV23XdkpbNr0EScZeeV1if3VELPfsVd0kVfYJ"
 target_workspace = "4673238790891396"
 target_folder = "7758662270773124"
 
-[tables.SUPPPDATA]
+[tables.SUPPDATA]
 id = "8245571630354308"
 src = ""
 
