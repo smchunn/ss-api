@@ -17,9 +17,6 @@ def get_sheet():
         print("Starting ...")
         if "verbose" in CONFIG and CONFIG["verbose"] == True:
             logging.basicConfig(filename="sheet.log", level=logging.INFO)
-        
-        # Retrieve the folder_id from the CONFIG
-        folder_id = CONFIG.get('env', {}).get('target_folder')
 
         for k, v in CONFIG["tables"].items():
             table_id = v["id"]
@@ -28,8 +25,7 @@ def get_sheet():
             # Pass the folder_id to the get_sheet_as_excel function
             ss_api.get_sheet_as_excel(
                 table_id, 
-                os.path.join(_dir_out, f'{table_name}.xlsx'), 
-                folder_id=folder_id
+                os.path.join(_dir_out, f'{table_name}.xlsx')
             )
 
 
