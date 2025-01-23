@@ -95,7 +95,7 @@ def get_sheet_as_excel(sheet_id, filepath, *, access_token=None, folder_id=None)
             )
             if response.status_code != 200:
                 raise APIException(f"GET: get sheet, {url},{headers}", response)
-            
+            print("api", filepath)
             with open(filepath, "wb") as f:
                 f.write(response.content)
             print(f"File saved as {filepath}")

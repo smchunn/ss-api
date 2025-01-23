@@ -31,7 +31,8 @@ summary: install
 	$(VENV)/bin/python ./ss_uploader.py summary
 
 get: install
-	$(VENV)/bin/python ./ss_uploader.py get
+	# Use $(filepath) to pass the directory path
+	$(VENV)/bin/python ./ss_uploader.py get '$(filepath)'
 
 test: install
 	$(VENV)/bin/python ./ss_uploader.py test
