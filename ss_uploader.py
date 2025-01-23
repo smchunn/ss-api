@@ -21,7 +21,7 @@ def get_sheet(_dir_out):
             table_name = k
 
             # Call get_sheet_as_excel with sheet_id directly
-            print("uploader", _dir_out)
+            
             ss_api.get_sheet_as_excel(
                 table_id,  # Pass the sheet_id
                 os.path.join(_dir_out, f'{table_name}.xlsx')
@@ -44,7 +44,7 @@ if __name__ == "__main__":
                 # Ensure the directory is passed as an argument
                 if len(sys.argv) > 2:
                     dir_out = sys.argv[2]
-                    print("47", dir_out)
+                    
                     get_sheet(dir_out)
                 else:
                     print("Error: Output directory not specified.")
