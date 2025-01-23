@@ -5,10 +5,10 @@ SMARTSHEET_ACCESS_TOKEN = "XV23XdkpbNr0EScZeeV1if3VELPfsVd0kVfYJ"
 target_workspace = "4673238790891396"
 target_folder = "7758662270773124"
 
-[tables.SUPPDATA]
+[tables.SUPPPDATA]
 id = "8245571630354308"
-src = "SUPPDATA.xlsx"
+src = ""
 
 [tables.POSXREF]
 id = "4881609496940420"
-src = "POSXREF.xlsx"
+src = ""
