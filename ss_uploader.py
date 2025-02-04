@@ -1,7 +1,7 @@
 import sys, os, logging
 import toml, openpyxl
 from datetime import datetime
-import ss_api
+from src import ss_api
 
 
 start_time = datetime.now()
