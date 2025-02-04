@@ -40,7 +40,7 @@ def attach_sheet():
             table_id = v["id"]
             table_src = v["src"]
             table_name = k
-            ss_api.atatch_file(table_id, os.path.join(_dir_in, table_src))
+            ss_api.attach_file(table_id, os.path.join(_dir_in, table_src))
 
 
 def set_sheet():
@@ -56,17 +56,17 @@ def set_sheet():
 
             if not table_id:
                 print(f"No existing table, uploading {table_src} to {table_name}")
-                result = ss_api.import_excel(
+                result = ss_api.import_xlsx_sheet(
                     f"{table_name}",
                     os.path.join(_dir_in, table_src),
-                    target_folder_id=target_folder_id,
+                    folder_id=target_folder_id,
                 )
                 if result:
                     table_id = str(result["result"]["id"])
                     print(f"  {table_name}({table_id}): new table loaded")
                     CONFIG["tables"][k]["id"] = table_id
             else:
-                result = ss_api.import_excel(
+                result = ss_api.import_xlsx_sheet(
                     f"TMP_{table_name}", os.path.join(_dir_in, table_src)
                 )
                 if not result:

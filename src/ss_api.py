@@ -99,7 +99,7 @@ def get_sheet_as_excel(sheet_id, filepath, *, access_token=None):
     return None
 
 
-def update_sheet(sheet_id, updates, *, access_token=None):
+def update_sheet(sheet_id, updates, *, access_token=None, batch_size=500):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         sheet = get_sheet(sheet_id, access_token=bearer)
@@ -114,12 +114,12 @@ def update_sheet(sheet_id, updates, *, access_token=None):
                 "Content-Type": "application/json",
             }
 
-            batch = 500
-            for i in range(0, len(updates), batch):
+            for i in range(0, len(updates), batch_size):
+                json = updates[i : i + batch_size]
                 response = client.put(
                     url=url,
                     headers=headers,
-                    json=updates[i : i + batch],
+                    json=json,
                     timeout=60,
                 )
                 logging.info(
@@ -247,13 +247,13 @@ def clear_sheet(sheet_id, *, access_token=None):
         print(f"An error occurred: {e.response}")
 
 
-def import_excel(sheet_name, filepath, target_folder_id=None, *, access_token=None):
+def import_xlsx_sheet(sheet_name, filepath, folder_id=None, *, access_token=None, timeout=120):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         with httpx.Client(verify=ssl_context) as client, open(filepath, "br") as xl:
-            if target_folder_id:
-                url = f"https://api.smartsheet.com/2.0/folders/{target_folder_id}/sheets/import?sheetName={sheet_name}&headerRowIndex=0&primaryColumnIndex=0"
+            if folder_id:
+                url = f"https://api.smartsheet.com/2.0/folders/{folder_id}/sheets/import?sheetName={sheet_name}&headerRowIndex=0&primaryColumnIndex=0"
             else:
                 url = f"https://api.smartsheet.com/2.0/sheets/import?sheetName={sheet_name}&headerRowIndex=0&primaryColumnIndex=0"
 
@@ -266,7 +266,7 @@ def import_excel(sheet_name, filepath, target_folder_id=None, *, access_token=No
                 url=url,
                 headers=headers,
                 content=xl,
-                timeout=120,
+                timeout=timeout,
             )
             if response.status_code != 200:
                 raise APIException("POST: import excel", response)
@@ -378,6 +378,7 @@ def update_columns(sheet_id, *, access_token=None):
     except APIException as e:
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
+
 
 def test():
     pass
