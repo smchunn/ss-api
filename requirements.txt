@@ -1,5 +1,4 @@
 openpyxl
-smartsheet-python-sdk
 toml
 httpx
 truststore

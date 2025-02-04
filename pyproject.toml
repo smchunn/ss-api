@@ -4,13 +4,13 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ss-api"
+name = "ss_api"
 version = "0.0.1"
 description = "smartsheet api wrapper"
 authors = [{ name = "smchunn", email = "smchunn@icloud.com" }]
 dependencies = [
   "openpyxl",
-  "smartsheet-python-sdk",
+  # "smartsheet-python-sdk",
   "toml",
   "httpx",
   "truststore",
