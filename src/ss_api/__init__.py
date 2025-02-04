@@ -9,7 +9,8 @@ from .ss_api import (
     delete_rows,
     delete_sheet,
     clear_sheet,
-    import_excel,
+    import_xlsx_sheet,
+    update_columns,
 )
 
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     "delete_rows",
     "delete_sheet",
     "clear_sheet",
-    "import_excel",
+    "import_xlsx_sheet",
+    "update_columns",
 ]
