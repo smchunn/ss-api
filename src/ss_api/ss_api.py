@@ -363,7 +363,7 @@ def update_columns(sheet_id, column_id, column_update, *, access_token=None):
                 )
             return response.json()
     except APIException as e:
-        logging.error(f"API Error: {e.response}")
+        logging.error(f"API Error: {e.response.json()}")
         print(f"An error occurred: {e.response}")
 
     return None
