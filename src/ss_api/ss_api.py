@@ -70,7 +70,7 @@ def get_sheet(sheet_id, last_modified=None, *, access_token=None) -> None | Dict
     return None
 
 
-def get_sheet_as_excel(sheet_id, filepath, *, access_token=None):
+def get_sheet_as_xlsx(sheet_id, filepath, *, access_token=None):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
