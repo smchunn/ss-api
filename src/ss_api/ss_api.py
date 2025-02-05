@@ -67,7 +67,6 @@ def get_sheet(sheet_id, last_modified=None, *, access_token=None) -> None | Dict
     except APIException as e:
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
-
     return None
 
 
@@ -247,7 +246,9 @@ def clear_sheet(sheet_id, *, access_token=None):
         print(f"An error occurred: {e.response}")
 
 
-def import_xlsx_sheet(sheet_name, filepath, folder_id=None, *, access_token=None, timeout=120):
+def import_xlsx_sheet(
+    sheet_name, filepath, folder_id=None, *, access_token=None, timeout=120
+):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -305,80 +306,64 @@ def attach_file(sheet_id, filepath, *, access_token=None):
     return None
 
 
-def update_columns(sheet_id, *, access_token=None):
+def get_columns(sheet_id, *, access_token=None):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-
-        # Define the column updates for specific types
-        column_updates = [
-            {
-                "title": "Status",
-                "type": "PICKLIST",
-                "options": [
-                    "Initial",
-                    "In-Work",
-                    "Issue",
-                    "Updated",
-                    "Re-Opened",
-                    "Validated",
-                    "Complete",
-                ],
-            },
-            {"title": "Created Date", "type": "DATE"},
-            {"title": "Modified Date", "type": "DATE"},
-        ]
-
         with httpx.Client(verify=ssl_context) as client:
-            # Get the current columns to find their IDs
             url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/columns"
-            headers = {"Authorization": f"Bearer {bearer}"}
-            response = client.get(url=url, headers=headers, timeout=240)
+            headers = {
+                "Authorization": f"Bearer {bearer}",
+            }
+            logging.info(f"GET: get columns, {url},{headers}")
+            response = client.get(
+                url=url,
+                headers=headers,
+                timeout=60,
+            )
+            if response.status_code == 404:
+                # Sheet does not exist, return None
+                return None
             if response.status_code != 200:
+                # Handle other errors
                 raise APIException(f"GET: get columns, {url},{headers}", response)
-
-            columns = response.json()
-
-            # Prepare the column updates with correct IDs
-            if "data" in columns:
-                columns = columns["data"]
-            else:
-                logging.error("Unexpected response structure: %s", columns)
-                raise ValueError("Unexpected response structure from Smartsheet API.")
-
-            # Prepare the column updates with correct IDs
-            updates = []
-            for col in columns:
-                if isinstance(col, dict) and "title" in col:
-                    # Default update to TEXT_NUMBER
-                    update = {
-                        "id": col["id"],
-                        "title": col["title"],
-                        "type": "TEXT_NUMBER",
-                    }
-                    # Check if the column has a specific update
-                    for specific_update in column_updates:
-                        if col["title"] == specific_update["title"]:
-                            update.update(specific_update)
-                            break
-                    updates.append(update)
-
-            # Update the columns
-            for update in updates:
-                column_id = update.pop("id")
-                url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/columns/{column_id}"
-                response = client.put(
-                    url=url, headers=headers, json=update, timeout=240
-                )
-                if response.status_code != 200:
-                    raise APIException(f"PUT: update column, {url},{headers}", response)
-
-            print("Columns updated successfully.")
-
+            return response.json()
     except APIException as e:
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
 
+    return None
 
-def test():
-    pass
+
+def update_columns(sheet_id, column_id, column_update, *, access_token=None):
+    try:
+        bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
+        ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        with httpx.Client(verify=ssl_context) as client:
+            url = (
+                f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/columns/{column_id}"
+            )
+            headers = {
+                "Authorization": f"Bearer {bearer}",
+            }
+            logging.info(f"GET: update columns, {url},{headers}")
+            response = client.put(
+                url=url,
+                headers=headers,
+                json=column_update,
+                timeout=60,
+            )
+            if response.status_code == 404:
+                # Sheet does not exist, return None
+                return None
+            if response.status_code != 200:
+                # Handle other errors
+                raise APIException(
+                    f"GET: update columns, {url},{headers},{column_update}", response
+                )
+            return response.json()
+    except APIException as e:
+        logging.error(f"API Error: {e.response}")
+        print(f"An error occurred: {e.response}")
+
+    return None
