@@ -169,6 +169,37 @@ def move_rows(target_sheet_id, source_sheet_id, *, access_token=None):
         print(f"An error occurred: {e.response}")
 
 
+def add_rows(sheet_id, rows, *, access_token=None, batch_size=500):
+    try:
+        bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
+        sheet = get_sheet(sheet_id, access_token=bearer)
+        if not sheet or not sheet["rows"]:
+            return
+
+        ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        with httpx.Client(verify=ssl_context) as client:
+            url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/rows"
+            headers = {
+                "Authorization": f"Bearer {bearer}",
+                "Content-Type": "application/json",
+            }
+
+            for i in range(0, len(rows), batch_size):
+                json = rows[i : i + batch_size]
+                response = client.post(
+                    url=url,
+                    headers=headers,
+                    json=json,
+                    timeout=60,
+                )
+                logging.info(f"POST: add_rows, url:{url},headers:{headers},json:{json}")
+                if response.status_code != 200:
+                    raise APIException(f"POST: add_rows, {url},{headers}", response)
+    except APIException as e:
+        logging.error(f"API Error: {e.response}")
+        print(f"An error occurred: {e.response}")
+
+
 def delete_rows(sheet_id, rows, *, access_token=None):
     try:
         responses = []
