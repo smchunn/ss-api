@@ -98,7 +98,7 @@ def get_sheet_as_xlsx(sheet_id, filepath, *, access_token=None):
     return None
 
 
-def update_sheet(sheet_id, updates, *, access_token=None, batch_size=500):
+def update_sheet(sheet_id, updates, *, access_token=None, batch_size=200):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         sheet = get_sheet(sheet_id, access_token=bearer)
@@ -270,7 +270,7 @@ def clear_sheet(sheet_id, *, access_token=None):
             for i, row in enumerate(sheet["rows"])
             if i > 0
         ]
-        #update_sheet(sheet_id, data, access_token=bearer)
+        update_sheet(sheet_id, data, access_token=bearer)
         delete_rows(sheet_id, [first_row_id], access_token=bearer)
     except APIException as e:
         logging.error(f"API Error: {e.response}")
