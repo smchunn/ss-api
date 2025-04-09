@@ -229,6 +229,49 @@ def delete_rows(sheet_id, rows, *, access_token=None):
         print(f"An error occurred: {e.response}")
     return None
 
+def delete_all_rows(sheet_id, *, access_token=None):
+    bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
+    ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    with httpx.Client(verify=ssl_context) as client:
+        try:
+            # Step 1: Retrieve all rows from the sheet
+            url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/rows"
+            headers = {
+                "Authorization": f"Bearer {bearer}",
+            }
+            response = client.get(url=url, headers=headers, timeout=60)
+            if response.status_code != 200:
+                raise APIException(f"GET: get rows, {url}, {headers}", response)
+
+            rows = response.json().get('data', [])
+            if not rows:
+                print("No rows to delete.")
+                return
+
+            # Step 2: Delete rows in batches
+            row_ids = [row['id'] for row in rows]
+            batch_size = 100  # Smartsheet API allows deleting up to 100 rows at a time
+            for i in range(0, len(row_ids), batch_size):
+                batch_ids = row_ids[i:i + batch_size]
+                delete_url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/rows"
+                delete_payload = {
+                    "ids": batch_ids
+                }
+                delete_response = client.delete(
+                    url=delete_url,
+                    headers=headers,
+                    json=delete_payload,
+                    timeout=60,
+                )
+                if delete_response.status_code != 200:
+                    raise APIException(f"DELETE: delete rows, {delete_url}, {headers}, {delete_payload}", delete_response)
+                print(f"Deleted rows: {batch_ids}")
+
+        except APIException as e:
+            logging.error(f"API Error: {e.response}")
+            print(f"An error occurred: {e.response}")
+
+    return None
 
 def delete_sheet(sheet_id, *, access_token=None):
     bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
