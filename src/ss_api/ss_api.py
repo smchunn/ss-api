@@ -201,6 +201,7 @@ def add_rows(sheet_id, rows, *, access_token=None, batch_size=500):
 
 
 def delete_rows(sheet_id, rows, *, access_token=None):
+    print("reached")
     try:
         responses = []
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
@@ -230,6 +231,7 @@ def delete_rows(sheet_id, rows, *, access_token=None):
     return None
 
 def delete_all_rows(sheet_id, *, access_token=None):
+    print("reached")
     bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
     ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     with httpx.Client(verify=ssl_context) as client:
