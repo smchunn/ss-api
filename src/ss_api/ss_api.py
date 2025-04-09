@@ -98,7 +98,7 @@ def get_sheet_as_xlsx(sheet_id, filepath, *, access_token=None):
     return None
 
 
-def update_sheet(sheet_id, updates, *, access_token=None, batch_size=200):
+def update_sheet(sheet_id, updates, *, access_token=None, batch_size=100):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         sheet = get_sheet(sheet_id, access_token=bearer)
@@ -418,5 +418,28 @@ def update_columns(sheet_id, column_id, column_update, *, access_token=None):
     except APIException as e:
         logging.error(f"API Error: {e.response.json()}")
         print(f"An error occurred: {e.response}")
+
+    return None
+
+def rename_sheet(sheet_id, new_sheet_name, *, access_token=None):
+    bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
+    ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    with httpx.Client(verify=ssl_context) as client:
+        try:
+            url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}"
+            headers = {
+                "Authorization": f"Bearer {bearer}",
+            }
+            response = client.delete(
+                url=url,
+                headers=headers,
+                timeout=60,
+            )
+            if response.status_code != 200:
+                raise APIException(f"GET: get sheet, {url},{headers}", response)
+            return response.json()
+        except APIException as e:
+            logging.error(f"API Error: {e.response}")
+            print(f"An error occurred: {e.response}")
 
     return None
