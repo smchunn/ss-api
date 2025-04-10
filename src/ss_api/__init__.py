@@ -13,6 +13,7 @@ from .ss_api import (
     import_xlsx_sheet,
     get_columns,
     update_columns,
+    delete_all_rows,
 )
 
 __all__ = [
@@ -30,4 +31,5 @@ __all__ = [
     "import_xlsx_sheet",
     "get_columns",
     "update_columns",
+    "delete_all_rows",
 ]
