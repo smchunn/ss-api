@@ -325,6 +325,7 @@ def clear_sheet(sheet_id, *, access_token=None):
 def import_xlsx_sheet(
     sheet_name, filepath, folder_id=None, *, access_token=None, timeout=120
 ):
+    print("imported ----------------")
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
