@@ -321,28 +321,6 @@ def clear_sheet(sheet_id, *, access_token=None):
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
 
-def clear_static_sheet(sheet_id, *, access_token=None):
-    try:
-        bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
-        sheet = get_sheet(sheet_id, access_token=bearer)
-        if not sheet:
-            exit()
-
-        if not sheet["rows"]:
-            return
-
-        first_row_id = sheet["rows"][0]["id"]
-        data = [
-            {"id": row["id"], "parentId": first_row_id}
-            for i, row in enumerate(sheet["rows"])
-            if i > 0
-        ]
-        
-        delete_rows(sheet_id, [first_row_id], access_token=bearer)
-    except APIException as e:
-        logging.error(f"API Error: {e.response}")
-        print(f"An error occurred: {e.response}")
-
 
 def import_xlsx_sheet(
     sheet_name, filepath, folder_id=None, *, access_token=None, timeout=120
