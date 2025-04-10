@@ -316,7 +316,7 @@ def clear_sheet(sheet_id, *, access_token=None):
             if i > 0
         ]
         update_sheet(sheet_id, data, access_token=bearer)
-        delete_all_rows(sheet_id, [first_row_id], access_token=bearer)
+        delete_rows(sheet_id, [first_row_id], access_token=bearer)
     except APIException as e:
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
