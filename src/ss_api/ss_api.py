@@ -264,7 +264,7 @@ def delete_all_rows(sheet_id, *, access_token=None):
                 )
                 if response.status_code != 200:
                     raise APIException(f"DELETE: delete rows, {delete_url}, {headers}", response)
-                print(f"Deleted rows: {batch}")
+                
 
     except APIException as e:
         logging.error(f"API Error: {e.response}")
@@ -451,14 +451,20 @@ def rename_sheet(sheet_id, new_sheet_name, *, access_token=None):
             url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}"
             headers = {
                 "Authorization": f"Bearer {bearer}",
+                "Content-Type": "application/json"  # Set the content type to JSON
             }
-            response = client.delete(
+            # Create the payload with the new sheet name
+            payload = {
+                "name": new_sheet_name
+            }
+            response = client.put(
                 url=url,
                 headers=headers,
+                json=payload,  # Use json to send the payload
                 timeout=60,
             )
             if response.status_code != 200:
-                raise APIException(f"GET: get sheet, {url},{headers}", response)
+                raise APIException(f"PUT: rename sheet, {url}, {headers}, {payload}", response)
             return response.json()
         except APIException as e:
             logging.error(f"API Error: {e.response}")
