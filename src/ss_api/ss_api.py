@@ -252,29 +252,26 @@ def delete_all_rows(sheet_id, *, access_token=None):
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         with httpx.Client(verify=ssl_context) as client:
             for i in range(0, len(row_ids), batch_size):
-                batch_ids = row_ids[i:i + batch_size]
-                delete_url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/rows"
-                delete_payload = {
-                    "ids": batch_ids
-                }
+                batch = ",".join(str(row_id) for row_id in row_ids[i:i + batch_size])
+                delete_url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/rows?ids={batch}&ignoreRowsNotFound=true"
                 headers = {
                     "Authorization": f"Bearer {bearer}",
                 }
-                delete_response = client.delete(
+                response = client.delete(
                     url=delete_url,
                     headers=headers,
-                    json=delete_payload,
                     timeout=60,
                 )
-                if delete_response.status_code != 200:
-                    raise APIException(f"DELETE: delete rows, {delete_url}, {headers}, {delete_payload}", delete_response)
-                print(f"Deleted rows: {batch_ids}")
+                if response.status_code != 200:
+                    raise APIException(f"DELETE: delete rows, {delete_url}, {headers}", response)
+                print(f"Deleted rows: {batch}")
 
     except APIException as e:
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
 
     return None
+
 
 
 def delete_sheet(sheet_id, *, access_token=None):
