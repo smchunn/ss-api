@@ -322,7 +322,7 @@ def clear_sheet(sheet_id, *, access_token=None):
 
 
 def import_xlsx_sheet(
-    sheet_name, filepath, folder_id=None, *, access_token=None, timeout=120
+    sheet_name, filepath, folder_id=None, *, access_token=None, timeout=180
 ):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
