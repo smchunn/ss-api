@@ -70,7 +70,7 @@ def get_sheet(sheet_id, last_modified=None, *, access_token=None) -> None | Dict
     return None
 
 
-def get_sheet_as_xlsx(sheet_id, filepath, *, return_json=True, access_token=None):
+def get_sheet_as_xlsx(sheet_id, filepath, *, access_token=None):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -90,12 +90,6 @@ def get_sheet_as_xlsx(sheet_id, filepath, *, return_json=True, access_token=None
             with open(filepath, "wb") as f:
                 f.write(response.content)
             print(f"File saved as {filepath}")
-            if return_json:
-                # If you want to return the JSON response as well
-                return response.json()
-            else:
-                # If you only want to save the file and not return JSON
-                return None
             return response.json()
     except APIException as e:
         logging.error(f"API Error: {e.response}")
