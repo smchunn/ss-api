@@ -155,11 +155,18 @@ def get_sheet_as_xlsx(sheet_id, filepath, *, access_token=None):
                 timeout=60,
             )
             if response.status_code != 200:
-                raise APIException(f"GET: get sheet, {url},{headers}", response)
+                try:
+                    error_msg = response.json()
+                except Exception:
+                    error_msg = response.text
+                raise APIException(
+                    f"GET: get sheet, {url},{headers}\nError: {error_msg}", response
+                )
+
             with open(filepath, "wb") as f:
                 f.write(response.content)
             print(f"File saved as {filepath}")
-            return response.json()
+            return filepath
     except APIException as e:
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
