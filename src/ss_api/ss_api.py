@@ -12,6 +12,15 @@ class APIException(Exception):
 
 
 def list_sheets(*, access_token=None) -> None | Dict:
+    """
+    Retrieve all Smartsheet sheets accessible to the user.
+
+    Args:
+        access_token (str, optional): Bearer token. If not provided, uses the SMARTSHEET_ACCESS_TOKEN environment variable.
+
+    Returns:
+        dict: Sheets list on success, or None on failure.
+    """
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -37,7 +46,56 @@ def list_sheets(*, access_token=None) -> None | Dict:
     return None
 
 
+def create_sheet(folder_id, sheet, *, access_token=None) -> None | Dict:
+    """
+    Create a new sheet inside a specified folder.
+
+    Args:
+        folder_id (str): Folder ID to create the sheet in.
+        sheet (dict): Sheet definition as per Smartsheet API.
+        access_token (str, optional): Bearer token.
+
+    Returns:
+        dict: Response dict on success, or None on failure.
+    """
+    try:
+        bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
+        ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        with httpx.Client(verify=ssl_context) as client:
+            url = f"https://api.smartsheet.com/2.0/folders/{folder_id}/sheets"
+            headers = {
+                "Authorization": f"Bearer {bearer}",
+                "Content-Type": "application/json",
+            }
+            logging.info(f"GET: list sheets, {url},{headers}")
+            response = client.post(
+                url=url,
+                headers=headers,
+                json=sheet,
+                timeout=60,
+            )
+            if response.status_code != 200:
+                raise APIException(f"GET: list sheets, {url},{headers}", response)
+            return response.json()
+    except APIException as e:
+        logging.error(f"API Error: {e.response}")
+        print(f"An error occurred: {e.response}")
+
+    return None
+
+
 def get_sheet(sheet_id, last_modified=None, *, access_token=None) -> None | Dict:
+    """
+    Retrieve details of a sheet by ID.
+
+    Args:
+        sheet_id (str): Sheet ID.
+        last_modified (str, optional): ISO date string; only rows modified since will be included.
+        access_token (str, optional): Bearer token.
+
+    Returns:
+        dict: Sheet data on success, None if not found or on error.
+    """
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -71,6 +129,17 @@ def get_sheet(sheet_id, last_modified=None, *, access_token=None) -> None | Dict
 
 
 def get_sheet_as_xlsx(sheet_id, filepath, *, access_token=None):
+    """
+    Download a sheet as an Excel file (XLSX).
+
+    Args:
+        sheet_id (str): Sheet ID.
+        filepath (str): Local file path to save the .xlsx.
+        access_token (str, optional): Bearer token.
+
+    Returns:
+        dict: Sheet data on success, None on error.
+    """
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -99,6 +168,15 @@ def get_sheet_as_xlsx(sheet_id, filepath, *, access_token=None):
 
 
 def update_sheet(sheet_id, updates, *, access_token=None, batch_size=100):
+    """
+    Batch update rows in a sheet.
+
+    Args:
+        sheet_id (str): Sheet ID.
+        updates (list of dict): Row update dictionaries.
+        access_token (str, optional): Bearer token.
+        batch_size (int, optional): Number of rows per batch.
+    """
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         sheet = get_sheet(sheet_id, access_token=bearer)
@@ -132,6 +210,14 @@ def update_sheet(sheet_id, updates, *, access_token=None, batch_size=100):
 
 
 def move_rows(target_sheet_id, source_sheet_id, *, access_token=None):
+    """
+    Move all rows from one sheet to another.
+
+    Args:
+        target_sheet_id (str): Destination sheet ID.
+        source_sheet_id (str): Source sheet ID.
+        access_token (str, optional): Bearer token.
+    """
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         source_sheet = get_sheet(source_sheet_id, access_token=bearer)
@@ -230,6 +316,7 @@ def delete_rows(sheet_id, rows, *, access_token=None):
         print(f"An error occurred: {e.response}")
     return None
 
+
 def delete_all_rows(sheet_id, *, access_token=None):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
@@ -252,7 +339,7 @@ def delete_all_rows(sheet_id, *, access_token=None):
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         with httpx.Client(verify=ssl_context) as client:
             for i in range(0, len(row_ids), batch_size):
-                batch = ",".join(str(row_id) for row_id in row_ids[i:i + batch_size])
+                batch = ",".join(str(row_id) for row_id in row_ids[i : i + batch_size])
                 delete_url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/rows?ids={batch}&ignoreRowsNotFound=true"
                 headers = {
                     "Authorization": f"Bearer {bearer}",
@@ -263,15 +350,15 @@ def delete_all_rows(sheet_id, *, access_token=None):
                     timeout=60,
                 )
                 if response.status_code != 200:
-                    raise APIException(f"DELETE: delete rows, {delete_url}, {headers}", response)
-                
+                    raise APIException(
+                        f"DELETE: delete rows, {delete_url}, {headers}", response
+                    )
 
     except APIException as e:
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
 
     return None
-
 
 
 def delete_sheet(sheet_id, *, access_token=None):
@@ -443,6 +530,7 @@ def update_columns(sheet_id, column_id, column_update, *, access_token=None):
 
     return None
 
+
 def rename_sheet(sheet_id, new_sheet_name, *, access_token=None):
     bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
     ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -451,12 +539,10 @@ def rename_sheet(sheet_id, new_sheet_name, *, access_token=None):
             url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}"
             headers = {
                 "Authorization": f"Bearer {bearer}",
-                "Content-Type": "application/json"  # Set the content type to JSON
+                "Content-Type": "application/json",  # Set the content type to JSON
             }
             # Create the payload with the new sheet name
-            payload = {
-                "name": new_sheet_name
-            }
+            payload = {"name": new_sheet_name}
             response = client.put(
                 url=url,
                 headers=headers,
@@ -464,7 +550,9 @@ def rename_sheet(sheet_id, new_sheet_name, *, access_token=None):
                 timeout=60,
             )
             if response.status_code != 200:
-                raise APIException(f"PUT: rename sheet, {url}, {headers}, {payload}", response)
+                raise APIException(
+                    f"PUT: rename sheet, {url}, {headers}, {payload}", response
+                )
             return response.json()
         except APIException as e:
             logging.error(f"API Error: {e.response}")

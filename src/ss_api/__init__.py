@@ -1,5 +1,6 @@
 from .ss_api import (
     list_sheets,
+    create_sheet,
     delete_rows,
     delete_sheet,
     get_sheet,
@@ -14,11 +15,12 @@ from .ss_api import (
     get_columns,
     update_columns,
     delete_all_rows,
-    rename_sheet
+    rename_sheet,
 )
 
 __all__ = [
     "list_sheets",
+    "create_sheet",
     "delete_rows",
     "delete_sheet",
     "get_sheet",
