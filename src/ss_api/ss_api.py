@@ -37,6 +37,33 @@ def list_sheets(*, access_token=None) -> None | Dict:
     return None
 
 
+def create_sheet(folder_id, sheet, *, access_token=None) -> None | Dict:
+    try:
+        bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
+        ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        with httpx.Client(verify=ssl_context) as client:
+            url = f"https://api.smartsheet.com/2.0/folders/{folder_id}/sheets"
+            headers = {
+                "Authorization": f"Bearer {bearer}",
+                "Content-Type": "application/json",
+            }
+            logging.info(f"GET: list sheets, {url},{headers}")
+            response = client.post(
+                url=url,
+                headers=headers,
+                json=sheet,
+                timeout=60,
+            )
+            if response.status_code != 200:
+                raise APIException(f"GET: list sheets, {url},{headers}", response)
+            return response.json()
+    except APIException as e:
+        logging.error(f"API Error: {e.response}")
+        print(f"An error occurred: {e.response}")
+
+    return None
+
+
 def get_sheet(sheet_id, last_modified=None, *, access_token=None) -> None | Dict:
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
@@ -230,6 +257,7 @@ def delete_rows(sheet_id, rows, *, access_token=None):
         print(f"An error occurred: {e.response}")
     return None
 
+
 def delete_all_rows(sheet_id, *, access_token=None):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
@@ -252,7 +280,7 @@ def delete_all_rows(sheet_id, *, access_token=None):
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         with httpx.Client(verify=ssl_context) as client:
             for i in range(0, len(row_ids), batch_size):
-                batch = ",".join(str(row_id) for row_id in row_ids[i:i + batch_size])
+                batch = ",".join(str(row_id) for row_id in row_ids[i : i + batch_size])
                 delete_url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/rows?ids={batch}&ignoreRowsNotFound=true"
                 headers = {
                     "Authorization": f"Bearer {bearer}",
@@ -263,15 +291,15 @@ def delete_all_rows(sheet_id, *, access_token=None):
                     timeout=60,
                 )
                 if response.status_code != 200:
-                    raise APIException(f"DELETE: delete rows, {delete_url}, {headers}", response)
-                
+                    raise APIException(
+                        f"DELETE: delete rows, {delete_url}, {headers}", response
+                    )
 
     except APIException as e:
         logging.error(f"API Error: {e.response}")
         print(f"An error occurred: {e.response}")
 
     return None
-
 
 
 def delete_sheet(sheet_id, *, access_token=None):
@@ -443,6 +471,7 @@ def update_columns(sheet_id, column_id, column_update, *, access_token=None):
 
     return None
 
+
 def rename_sheet(sheet_id, new_sheet_name, *, access_token=None):
     bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
     ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -451,12 +480,10 @@ def rename_sheet(sheet_id, new_sheet_name, *, access_token=None):
             url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}"
             headers = {
                 "Authorization": f"Bearer {bearer}",
-                "Content-Type": "application/json"  # Set the content type to JSON
+                "Content-Type": "application/json",  # Set the content type to JSON
             }
             # Create the payload with the new sheet name
-            payload = {
-                "name": new_sheet_name
-            }
+            payload = {"name": new_sheet_name}
             response = client.put(
                 url=url,
                 headers=headers,
@@ -464,7 +491,9 @@ def rename_sheet(sheet_id, new_sheet_name, *, access_token=None):
                 timeout=60,
             )
             if response.status_code != 200:
-                raise APIException(f"PUT: rename sheet, {url}, {headers}, {payload}", response)
+                raise APIException(
+                    f"PUT: rename sheet, {url}, {headers}, {payload}", response
+                )
             return response.json()
         except APIException as e:
             logging.error(f"API Error: {e.response}")
