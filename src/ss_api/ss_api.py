@@ -432,7 +432,7 @@ def import_xlsx_sheet(
                 params = urlencode(
                     {
                         "sheetName": sheet_name,
-                        "sheetName": 0,
+                        "headerRowIndex": 0,
                         "primaryColumnIndex": primary_column_index,
                     }
                 )
@@ -441,7 +441,7 @@ def import_xlsx_sheet(
                 params = urlencode(
                     {
                         "sheetName": sheet_name,
-                        "sheetName": 0,
+                        "headerRowIndex": 0,
                         "primaryColumnIndex": primary_column_index,
                     }
                 )
