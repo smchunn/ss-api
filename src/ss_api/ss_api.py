@@ -416,16 +416,36 @@ def clear_sheet(sheet_id, *, access_token=None):
 
 
 def import_xlsx_sheet(
-    sheet_name, filepath, folder_id=None, *, access_token=None, timeout=240
+    sheet_name,
+    filepath,
+    folder_id=None,
+    primary_column_index=0,
+    *,
+    access_token=None,
+    timeout=240,
 ):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         with httpx.Client(verify=ssl_context) as client, open(filepath, "br") as xl:
             if folder_id:
-                url = f"https://api.smartsheet.com/2.0/folders/{folder_id}/sheets/import?sheetName={sheet_name}&headerRowIndex=0&primaryColumnIndex=0"
+                params = urlencode(
+                    {
+                        "sheetName": sheet_name,
+                        "sheetName": 0,
+                        "primaryColumnIndex": primary_column_index,
+                    }
+                )
+                url = f"https://api.smartsheet.com/2.0/folders/{folder_id}/sheets/import?{params}"
             else:
-                url = f"https://api.smartsheet.com/2.0/sheets/import?sheetName={sheet_name}&headerRowIndex=0&primaryColumnIndex=0"
+                params = urlencode(
+                    {
+                        "sheetName": sheet_name,
+                        "sheetName": 0,
+                        "primaryColumnIndex": primary_column_index,
+                    }
+                )
+                url = f"https://api.smartsheet.com/2.0/sheets/import?{params}"
 
             headers = {
                 "Authorization": f"Bearer {bearer}",
