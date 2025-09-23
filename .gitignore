@@ -6,3 +6,4 @@ out/**
 sheet.log
 config.toml
 __pycache__
+ss_api.egg-info

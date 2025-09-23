@@ -586,3 +586,50 @@ def rename_sheet(sheet_id, new_sheet_name, *, access_token=None):
             print(f"An error occurred: {e.response}")
 
     return None
+
+
+def update_column_description(sheet_id, column_id, new_description, *, access_token=None):
+    """
+    Update the description of a column in a sheet.
+
+    Args:
+        sheet_id (str): The ID of the sheet.
+        column_id (str): The ID of the column to update.
+        new_description (str): The new description text for the column.
+        access_token (str, optional): Bearer token.
+
+    Returns:
+        dict: Updated column data on success, None on failure.
+    """
+    try:
+        bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
+        logging.info(f"PUT: update column description, sheet_id={sheet_id}, column_id={column_id}")
+        column_update = {
+            "description": new_description
+        }
+        ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        with httpx.Client(verify=ssl_context) as client:
+            url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/columns/{column_id}"
+            headers = {
+                "Authorization": f"Bearer {bearer}",
+                "Content-Type": "application/json",
+            }
+            response = client.put(
+                url=url,
+                headers=headers,
+                json=column_update,
+                timeout=60,
+            )
+            if response.status_code == 404:
+                logging.error(f"Column or sheet not found: sheet_id={sheet_id}, column_id={column_id}")
+                return None
+            if response.status_code != 200:
+                logging.error(f"Failed to update column description: {response.text}")
+                print(f"An error occurred: {response.text}")
+                return None
+            logging.info(f"Successfully updated column description: sheet_id={sheet_id}, column_id={column_id}")
+            return response.json()
+    except Exception as e:
+        logging.error(f"Exception during update_column_description: {e}")
+        print(f"An error occurred while updating column description: {e}")
+        return None

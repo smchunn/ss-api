@@ -16,6 +16,7 @@ from .ss_api import (
     update_columns,
     delete_all_rows,
     rename_sheet,
+    update_column_description,
 )
 
 __all__ = [
@@ -36,4 +37,5 @@ __all__ = [
     "update_columns",
     "delete_all_rows",
     "rename_sheet",
+    "update_column_description",
 ]
