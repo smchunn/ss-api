@@ -3,12 +3,34 @@ from typing import Dict
 import httpx, truststore, ssl
 from pathlib import Path
 from urllib.parse import urlencode
+import time
 
 
 class APIException(Exception):
     def __init__(self, message, response):
         super().__init__(message)
         self.response = response
+
+
+def retry_on_500(max_retries=3, delay=2):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            retries = 0
+            while True:
+                try:
+                    return func(*args, **kwargs)
+                except APIException as e:
+                    if e.response.status_code == 500:
+                        retries += 1
+                        if retries > max_retries:
+                            logging.error(f"Max retries exceeded for {func.__name__}")
+                            raise
+                        logging.warning(f"500 error on {func.__name__}, retrying {retries}/{max_retries} after {delay}s...")
+                        time.sleep(delay)
+                    else:
+                        raise
+        return wrapper
+    return decorator
 
 
 def list_sheets(*, access_token=None) -> None | Dict:
@@ -46,6 +68,7 @@ def list_sheets(*, access_token=None) -> None | Dict:
     return None
 
 
+@retry_on_500(max_retries=3, delay=2)
 def create_sheet(folder_id, sheet, *, access_token=None) -> None | Dict:
     """
     Create a new sheet inside a specified folder.
@@ -174,6 +197,7 @@ def get_sheet_as_xlsx(sheet_id, filepath, *, access_token=None):
     return None
 
 
+@retry_on_500(max_retries=3, delay=2)
 def update_sheet(sheet_id, updates, *, access_token=None, batch_size=100):
     """
     Batch update rows in a sheet.
@@ -216,6 +240,7 @@ def update_sheet(sheet_id, updates, *, access_token=None, batch_size=100):
         print(f"An error occurred: {e.response}")
 
 
+@retry_on_500(max_retries=3, delay=2)
 def move_rows(target_sheet_id, source_sheet_id, *, access_token=None):
     """
     Move all rows from one sheet to another.
@@ -262,6 +287,7 @@ def move_rows(target_sheet_id, source_sheet_id, *, access_token=None):
         print(f"An error occurred: {e.response}")
 
 
+@retry_on_500(max_retries=3, delay=2)
 def add_rows(sheet_id, rows, *, access_token=None, batch_size=500):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
@@ -293,6 +319,7 @@ def add_rows(sheet_id, rows, *, access_token=None, batch_size=500):
         print(f"An error occurred: {e.response}")
 
 
+@retry_on_500(max_retries=3, delay=2)
 def delete_rows(sheet_id, rows, *, access_token=None):
     print("reached")
     try:
@@ -324,6 +351,7 @@ def delete_rows(sheet_id, rows, *, access_token=None):
     return None
 
 
+@retry_on_500(max_retries=3, delay=2)
 def delete_all_rows(sheet_id, *, access_token=None):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
@@ -368,6 +396,7 @@ def delete_all_rows(sheet_id, *, access_token=None):
     return None
 
 
+@retry_on_500(max_retries=3, delay=2)
 def delete_sheet(sheet_id, *, access_token=None):
     bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
     ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -392,6 +421,7 @@ def delete_sheet(sheet_id, *, access_token=None):
     return None
 
 
+@retry_on_500(max_retries=3, delay=2)
 def clear_sheet(sheet_id, *, access_token=None):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
@@ -415,6 +445,7 @@ def clear_sheet(sheet_id, *, access_token=None):
         print(f"An error occurred: {e.response}")
 
 
+@retry_on_500(max_retries=3, delay=2)
 def import_xlsx_sheet(
     sheet_name,
     filepath,
@@ -535,7 +566,7 @@ def update_columns(sheet_id, column_id, column_update, *, access_token=None):
             headers = {
                 "Authorization": f"Bearer {bearer}",
             }
-            logging.info(f"GET: update columns, {url},{headers}")
+            logging.info(f"PUT: update columns, {url}, payload: {column_update}")
             response = client.put(
                 url=url,
                 headers=headers,
@@ -546,9 +577,14 @@ def update_columns(sheet_id, column_id, column_update, *, access_token=None):
                 # Sheet does not exist, return None
                 return None
             if response.status_code != 200:
-                # Handle other errors
+                # Log full response content for debugging
+                try:
+                    error_content = response.json()
+                except Exception:
+                    error_content = response.text
+                logging.error(f"PUT: update columns failed, response: {error_content}")
                 raise APIException(
-                    f"GET: update columns, {url},{headers},{column_update}", response
+                    f"PUT: update columns, {url},{headers},{column_update}", response
                 )
             return response.json()
     except APIException as e:
@@ -632,4 +668,48 @@ def update_column_description(sheet_id, column_id, new_description, *, access_to
     except Exception as e:
         logging.error(f"Exception during update_column_description: {e}")
         print(f"An error occurred while updating column description: {e}")
+        return None
+
+
+@retry_on_500(max_retries=3, delay=2)
+def add_sheet_collaborator(sheet_id, email, access_level="EDITOR", *, access_token=None):
+    """
+    Add a collaborator to a sheet.
+
+    Args:
+        sheet_id (str): The ID of the sheet.
+        email (str): The email address of the collaborator to add.
+        access_level (str, optional): Access level for the collaborator. Defaults to "EDITOR".
+        access_token (str, optional): Bearer token.
+
+    Returns:
+        dict: Response data on success, None on failure.
+    """
+    try:
+        bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
+        ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        with httpx.Client(verify=ssl_context) as client:
+            url = f"https://api.smartsheet.com/2.0/sheets/{sheet_id}/shares"
+            headers = {
+                "Authorization": f"Bearer {bearer}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "email": email,
+                "accessLevel": access_level
+            }
+            response = client.post(
+                url=url,
+                headers=headers,
+                json=payload,
+                timeout=60,
+            )
+            if response.status_code != 200:
+                logging.error(f"Failed to add collaborator: {response.text}")
+                print(f"An error occurred: {response.text}")
+                return None
+            return response.json()
+    except Exception as e:
+        logging.error(f"Exception during add_sheet_collaborator: {e}")
+        print(f"An error occurred while adding collaborator: {e}")
         return None
