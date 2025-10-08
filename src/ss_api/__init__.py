@@ -17,6 +17,8 @@ from .ss_api import (
     delete_all_rows,
     rename_sheet,
     update_column_description,
+    add_sheet_collaborator,
+    create_cross_sheet_reference,
 )
 
 __all__ = [
@@ -38,4 +40,6 @@ __all__ = [
     "delete_all_rows",
     "rename_sheet",
     "update_column_description",
+    "add_sheet_collaborator",
+    "create_cross_sheet_reference",
 ]
