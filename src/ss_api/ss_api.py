@@ -713,3 +713,37 @@ def add_sheet_collaborator(sheet_id, email, access_level="EDITOR", *, access_tok
         logging.error(f"Exception during add_sheet_collaborator: {e}")
         print(f"An error occurred while adding collaborator: {e}")
         return None
+
+
+def create_cross_sheet_reference(destination_sheet_id: int, source_sheet_id: int, source_column_id: int, name: str, *, access_token=None) -> dict | None:
+    """
+    Create a cross-sheet reference in the destination sheet referencing a range from the source sheet.
+
+    Returns:
+        dict: API response on success, None on failure.
+    """
+    try:
+        bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
+        ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        url = f"https://api.smartsheet.com/2.0/sheets/{destination_sheet_id}/crosssheetreferences"
+        headers = {
+            "Authorization": f"Bearer {bearer}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "name": name,
+            "sourceSheetId": source_sheet_id,
+            "startColumnId": source_column_id,
+            "endColumnId": source_column_id,
+        }
+        with httpx.Client(verify=ssl_context) as client:
+            response = client.post(url, headers=headers, json=payload, timeout=60)
+            if response.status_code != 200:
+                logging.error(f"Failed to create cross-sheet reference: {response.text}")
+                print(f"An error occurred: {response.text}")
+                return None
+            return response.json()
+    except APIException as e:
+        logging.error(f"API Error: {e.response}")
+        print(f"An error occurred: {e.response}")
+        return None
