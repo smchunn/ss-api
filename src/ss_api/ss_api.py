@@ -292,7 +292,7 @@ def add_rows(sheet_id, rows, *, access_token=None, batch_size=500):
     try:
         bearer = access_token or os.environ["SMARTSHEET_ACCESS_TOKEN"]
         sheet = get_sheet(sheet_id, access_token=bearer)
-        if not sheet or not sheet["rows"]:
+        if not sheet:
             return
 
         ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
