@@ -90,7 +90,7 @@ def create_sheet(folder_id, sheet, *, access_token=None) -> None | Dict:
                 "Authorization": f"Bearer {bearer}",
                 "Content-Type": "application/json",
             }
-            logging.info(f"GET: list sheets, {url},{headers}")
+            logging.info(f"POST: create sheet, {url},{headers}, payload: {sheet}")
             response = client.post(
                 url=url,
                 headers=headers,
@@ -98,7 +98,7 @@ def create_sheet(folder_id, sheet, *, access_token=None) -> None | Dict:
                 timeout=60,
             )
             if response.status_code != 200:
-                raise APIException(f"GET: list sheets, {url},{headers}", response)
+                raise APIException(f"POST: create sheet, {url},{headers}", response)
             return response.json()
     except APIException as e:
         logging.error(f"API Error: {e.response}")
